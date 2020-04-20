@@ -8,7 +8,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:path/path.dart' as p;
+import 'package:path/path.dart' as path;
 
 void main() => runApp(MyApp());
 
@@ -35,7 +35,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final String _fileURl = "http://lot.services/blog/files/DSCF0277.jpg";
+  final String _fileUrl = "http://lot.services/blog/files/DSCF0277.jpg";
   final String _fileName = "DSCF0277.jpg";
   final Dio _dio = Dio();
 
@@ -48,11 +48,11 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
 
     flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
-    var android = AndroidInitializationSettings('@mipmap/ic_launcher');
-    var iOS = IOSInitializationSettings();
-    var initSetttings = InitializationSettings(android, iOS);
+    final android = AndroidInitializationSettings('@mipmap/ic_launcher');
+    final iOS = IOSInitializationSettings();
+    final initSettings = InitializationSettings(android, iOS);
 
-    flutterLocalNotificationsPlugin.initialize(initSetttings, onSelectNotification: _onSelectNotification);
+    flutterLocalNotificationsPlugin.initialize(initSettings, onSelectNotification: _onSelectNotification);
   }
 
   Future<void> _onSelectNotification(String json) async {
@@ -85,7 +85,7 @@ class _MyHomePageState extends State<MyHomePage> {
     final isSuccess = downloadStatus['isSuccess'];
 
     await flutterLocalNotificationsPlugin.show(
-      0,
+      0, // notification id
       isSuccess ? 'Success' : 'Failure',
       isSuccess ? 'File has been downloaded successfully!' : 'There was an error while downloading the file.',
       platform,
@@ -98,6 +98,10 @@ class _MyHomePageState extends State<MyHomePage> {
       return await DownloadsPathProvider.downloadsDirectory;
     }
 
+    // in this example we are using only Android and iOS so I can assume
+    // that you are not trying it for other platforms and the if statement
+    // for iOS is unnecessary
+  
     // iOS directory visible to user
     return await getApplicationDocumentsDirectory();
   }
@@ -130,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     try {
       final response = await _dio.download(
-        _fileURl,
+        _fileUrl,
         savePath,
         onReceiveProgress: _onReceiveProgress
       );
@@ -148,8 +152,10 @@ class _MyHomePageState extends State<MyHomePage> {
     final isPermissionStatusGranted = await _requestPermissions();
 
     if (isPermissionStatusGranted) {
-      final savePath = p.join(dir.path, _fileName);
+      final savePath = path.join(dir.path, _fileName);
       await _startDownload(savePath);
+    } else {
+      // handle the scenario when user declines the permissions
     }
   }
 
